@@ -1,1 +1,39 @@
-
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Playlist Duration Calculator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0d0f12;color:#eee;font-family:system-ui,sans-serif}
+main{max-width:760px;margin:auto;padding:25px 16px}.card{background:#181b20;border:1px solid #30343b;border-radius:22px;padding:24px}
+h1{margin:0 0 6px}.sub{color:#9da2aa}.row{display:flex;gap:9px;margin-top:18px}
+input{flex:1;min-width:0;padding:14px;border-radius:12px;border:1px solid #3a3e46;background:#101216;color:white;font-size:16px}
+button{padding:14px 18px;border:0;border-radius:12px;font-weight:800;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px}.stat{background:#101216;border-radius:15px;padding:16px}
+.num{font-size:24px;font-weight:800}.lab{font-size:13px;color:#999}.status{margin-top:18px;padding:14px;background:#101216;border-radius:14px;color:#aaa}
+@media(max-width:550px){.row{flex-direction:column}}
+</style></head>
+<body><main><div class="card">
+<h1>🎵 Playlist Duration Calculator</h1>
+<div class="sub">ตรวจเวลารวม YouTube / YouTube Music Playlist</div>
+<div class="row"><input id="url" placeholder="วางลิงก์ Playlist"><button onclick="go()">คำนวณ</button></div>
+<div id="status" class="status">พร้อมทำงาน</div>
+<div id="result" style="display:none"><h3 id="title"></h3><div class="grid">
+<div class="stat"><div class="num" id="count">-</div><div class="lab">เพลงทั้งหมด</div></div>
+<div class="stat"><div class="num" id="total">-</div><div class="lab">เวลารวม</div></div>
+<div class="stat"><div class="num" id="avg">-</div><div class="lab">เฉลี่ยต่อเพลง</div></div>
+<div class="stat"><div class="num" id="days">-</div><div class="lab">คิดเป็นวัน</div></div>
+</div></div>
+</div></main>
+<script>
+const fmt=s=>{let d=Math.floor(s/86400);s%=86400;let h=Math.floor(s/3600);s%=3600;let m=Math.floor(s/60),x=s%60;
+return (d?d+' วัน ':'')+h+' ชม. '+m+' นาที '+x+' วิ.'};
+async function go(){let u=document.getElementById('url').value.trim();if(!u)return;
+let st=document.getElementById('status');st.textContent='⏳ กำลังดึงข้อมูลทุกเพลง...';document.getElementById('result').style.display='none';
+try{let r=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:u})});
+let j=await r.json();if(!r.ok)throw Error(j.error||'เกิดข้อผิดพลาด');
+document.getElementById('result').style.display='block';document.getElementById('title').textContent=j.title;
+document.getElementById('count').textContent=j.count+' เพลง';document.getElementById('total').textContent=fmt(j.seconds);
+document.getElementById('avg').textContent=fmt(j.count?Math.round(j.seconds/j.count):0);
+document.getElementById('days').textContent=(j.seconds/86400).toFixed(2)+' วัน';
+st.textContent='✅ คำนวณเสร็จแล้ว ('+j.known+'/'+j.count+' เพลงมี duration)';
+}catch(e){st.textContent='❌ '+e.message}}
+</script></body></html>
